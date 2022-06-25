@@ -5,9 +5,7 @@
   <input name="iterations" type="text" maxlength="3" size="3" v-model="iterations"/>
   <button @click="simulate()">RUN SIMULATION</button>
   <h4>Progress</h4>
-  <div class="progress-bar">
-    <div class="progress" :style="{width: getProgress}"/>
-  </div>
+  <vue3-progress-bar />
 </section>
 <section>
   <h2>Total</h2>
@@ -23,6 +21,8 @@
 </template>
 
 <script>
+import { useProgress } from '@marcoschulte/vue3-progress'
+
 export default {
   emits: ['sendStrategy'],
   data () {
@@ -56,36 +56,40 @@ export default {
   },
   methods: {
     simulate () {
-      this.strategy = []
-      for (let x = 0; x < this.iterations; x++) {
-        this.progress = x / 2
-        let runningTotal = 0
-        let player = this.getRandomInt(1, 2)
-        const strategyTemp = { 1: [], 2: [] }
+      async () => {
+        this.strategy = []
+        for (let x = 0; x < this.iterations; x++) {
+          this.progress = x / 2
+          let runningTotal = 0
+          let player = this.getRandomInt(1, 2)
+          const strategyTemp = { 1: [], 2: [] }
 
-        // console.log('==========Game ' + x + new Array(12 - `${this.iterations}`.length).join('='))
-        do {
-          const p = this.getStrategy(runningTotal)
-          if (runningTotal + p >= this.targetNumber) break
-          strategyTemp[player][runningTotal] = p // index should be runningTotal not just increment
-          runningTotal += p
-          // console.log('Player ' + player + ' adds ' + p)
-          // console.log('The total is now ' + runningTotal)
+          // console.log('==========Game ' + x + new Array(12 - `${this.iterations}`.length).join('='))
+          do {
+            const p = this.getStrategy(runningTotal)
+            if (runningTotal + p >= this.targetNumber) break
+            strategyTemp[player][runningTotal] = p // index should be runningTotal not just increment
+            runningTotal += p
+            // console.log('Player ' + player + ' adds ' + p)
+            // console.log('The total is now ' + runningTotal)
+            player = player === 2 ? 1 : 2
+          } while (runningTotal <= this.targetNumber)
+
           player = player === 2 ? 1 : 2
-        } while (runningTotal <= this.targetNumber)
-
-        player = player === 2 ? 1 : 2
-        // console.log('Player ' + player + ' WINS')
-        // console.log('=========================')
-        this.mapResults(strategyTemp[player])
-        this.winners[player]++
+          // console.log('Player ' + player + ' WINS')
+          // console.log('=========================')
+          this.mapResults(strategyTemp[player])
+          this.winners[player]++
+        }
+        // console.log('Record of winning results [total at start of go] {number played}')
+        // console.log(this.strategy)
+        // console.log('Total number of wins for each player')
+        // console.log(this.winners)
+        this.progress = 0
+        this.$emit('sendStrategy', this.strategy)
+        return true
       }
-      // console.log('Record of winning results [total at start of go] {number played}')
-      // console.log(this.strategy)
-      // console.log('Total number of wins for each player')
-      // console.log(this.winners)
-      this.progress = 0
-      this.$emit('sendStrategy', this.strategy)
+
     },
     getStrategy (runningTotal) {
       let jump = this.getRandomInt(1, 3)
