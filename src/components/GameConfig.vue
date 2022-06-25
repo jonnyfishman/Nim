@@ -29,8 +29,7 @@ export default {
     return {
       iterations: 10,
       strategy: [],
-      winners: { 1: 0, 2: 0 },
-      progress: 0
+      winners: { 1: 0, 2: 0 }
     }
   },
   props: {
@@ -55,11 +54,11 @@ export default {
     }
   },
   methods: {
-    simulate () {
-      async () => {
+    async simulate () {
+
         this.strategy = []
         for (let x = 0; x < this.iterations; x++) {
-          this.progress = x / 2
+
           let runningTotal = 0
           let player = this.getRandomInt(1, 2)
           const strategyTemp = { 1: [], 2: [] }
@@ -85,11 +84,9 @@ export default {
         // console.log(this.strategy)
         // console.log('Total number of wins for each player')
         // console.log(this.winners)
-        this.progress = 0
         this.$emit('sendStrategy', this.strategy)
-        return true
-      }
 
+        return true
     },
     getStrategy (runningTotal) {
       let jump = this.getRandomInt(1, 3)
