@@ -1,64 +1,88 @@
 <template>
-<section>
-  <h1>Config</h1>
-  <label for="iterations">Iterations: </label>
-  <input name="iterations" type="text" maxlength="3" size="3" v-model="iterations"/>
-  <button @click="simulate()">RUN SIMULATION</button>
-  <h4>Progress</h4>
-  <vue3-progress-bar />
-</section>
-<section>
-  <h2>Total</h2>
-  <p>The larger the circle the better it is.</p>
-  <ol v-if="strategy.length > 0" start="0">
-    <li v-for="(result, index) in strategy" :key="index" :class="{ empty: !result }">
-      <span v-for="(value, key, index) of result" class="bubble" :style="getStyles(value, result)" :key="index">
-        {{ key }}
-      </span>
-    </li>
-  </ol>
-</section>
+  <aside v-if="hideConfig">
+    <section class="config config-top">
+      <h1>Config</h1>
+      <label for="iterations">Iterations: </label>
+      <input name="iterations" type="text" maxlength="3" size="3" v-model="iterations"/>
+      <button @click="simulate()" class="btn">RUN SIMULATION</button>
+      <h4>Progress</h4>
+      <vue3-progress-bar />
+    </section>
+    <section class="config">
+      <h2>Total</h2>
+      <p>The larger the circle the better it is.</p>
+      <ul v-if="strategy.running.length > 0">
+        <li
+          v-for="(result, rTotal) in strategy.cumulative"
+          :key="rTotal"
+          :class="{ empty: !result }"
+        >
+            <h4>For a total of {{ rTotal }}</h4>
+            <div>
+              <span
+                v-for="(n, i) in result"
+                :class="getClass(result, i)"
+                :key="i"
+                :title="getProb(i, rTotal)"
+                class="options"
+              >
+                {{ i + 1 }}
+              </span>
+            </div>
+        </li>
+      </ul>
+    </section>
+  </aside>
 </template>
 
 <script>
-import { useProgress } from '@marcoschulte/vue3-progress'
+// import { useProgress } from '@marcoschulte/vue3-progress'
+// use whole object in loop above and use alt for probability (prob / Object.values(arr).sort((a, b) => a + b)).toFixed(2)
 
 export default {
-  emits: ['sendStrategy'],
+  emits: ['emitter'],
   data () {
     return {
       iterations: 10,
-      strategy: [],
-      winners: { 1: 0, 2: 0 }
+      strategy: {
+        running: [],
+        cumulative: [],
+        probability: []
+      },
+      winners: { 1: 0, 2: 0 },
+      progress: null
     }
   },
   props: {
     targetNumber: Number,
     runningTotal: Number
   },
-  computed: {
-    getProgress () {
-      return this.progress + 'px'
-    }
-  },
   watch: {
     runningTotal (runningTotal) {
-      const list = document.querySelectorAll('ol li')
+      const list = document.querySelectorAll('ul li')
       if (list[runningTotal] && runningTotal !== 0) {
         list[runningTotal].classList.add('highlight')
-        list[runningTotal].scrollIntoView({ behavior: 'smooth' })
+        list[runningTotal].scrollIntoView({ behavior: 'smooth', block: 'center' })
         setTimeout(() => {
           list[runningTotal].classList.remove('highlight')
         }, 2500)
       }
     }
   },
+  computed: {
+    hideConfig () {
+      return !this.$route.params.hide
+    }
+  },
   methods: {
-    async simulate () {
-
-        this.strategy = []
+    simulate () {
+      new Promise((resolve, reject) => {
+        this.progress = this.$progress.start()
+        resolve()
+      }).then(() => {
+        this.strategy.running = []
+        this.strategy.cumulative = []
         for (let x = 0; x < this.iterations; x++) {
-
           let runningTotal = 0
           let player = this.getRandomInt(1, 2)
           const strategyTemp = { 1: [], 2: [] }
@@ -79,14 +103,17 @@ export default {
           // console.log('=========================')
           this.mapResults(strategyTemp[player])
           this.winners[player]++
+          // console.log('Record of winning results [total at start of go] {number played}')
+          // console.log(this.strategy)
+          // console.log('Total number of wins for each player')
+          // console.log(this.winners)
         }
-        // console.log('Record of winning results [total at start of go] {number played}')
-        // console.log(this.strategy)
-        // console.log('Total number of wins for each player')
-        // console.log(this.winners)
-        this.$emit('sendStrategy', this.strategy)
-
-        return true
+      }).catch(() => {
+        // error
+      }).then(() => {
+        this.$emit('emitter', this.strategy.cumulative)
+        this.progress.finish()
+      })
     },
     getStrategy (runningTotal) {
       let jump = this.getRandomInt(1, 3)
@@ -100,16 +127,31 @@ export default {
     },
     mapResults (strategyTemp) {
       strategyTemp.forEach((item, i) => {
-        if (!this.strategy[i]) this.strategy[i] = { 1: 0, 2: 0, 3: 0 }
+        if (!this.strategy.running[i]) this.strategy.running[i] = { 1: 0, 2: 0, 3: 0 }
 
-        this.strategy[i][item]++
+        this.strategy.running[i][item]++
+        // work out best solution from { 1: 4, 2: 1, 3: 8 }
+        const result = this.strategy.running[i]
+        this.strategy.cumulative[i] = Object.entries(result).sort((a, b) => a[1] - b[1]).reverse()
+
+        const entries = Object.values(result)
+        const total = entries.reduce((a, b) => a + b)
+        this.strategy.probability[i] = Array.from({ length: 3 }).map((e, i) => (entries[i] / total).toFixed(2))
       })
     },
     getRandomInt (min, max) {
       return Math.floor(Math.random() * (1 + max - min) + min)
     },
-    getStyles (prob, arr) {
-      return { outlineWidth: (prob / Object.values(arr).reduce((a, b) => a + b)).toFixed(2) + 'em', color: (prob > 0) ? '#fff' : 'inherit', backgroundColor: (prob > 0) ? '#0d5460' : 'none' }
+    getProb (choice, index) {
+      return parseInt(this.strategy.probability[index][choice] * 100) + '%'
+    },
+    getClass (results, index) {
+      if (+results[0][0] === index + 1) {
+        return 'best'
+      } else if (+results[1][0] === index + 1) {
+        return 'ok'
+      }
+      return 'worst'
     }
   }
 }
@@ -117,71 +159,91 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  section {
+  @import "~@marcoschulte/vue3-progress/dist/";
+  .vue3-progress-bar-container :deep(.vue3-progress-bar) {
+    background-color:#fff;
+    height:4px;
+  }
+  .vue3-progress-bar-container {
+    position:relative;
+    background-color:rgba(255,255,255,0.4);
+    height:4px;
+    opacity:1;
+    overflow:hidden;
+    z-index:10;
+  }
+
+  section.config {
     padding:2em;
     flex: 1 1 auto;
-    background: #f2f2f2;
-  }
-  section h2, ul {
     color: #0d5460;
   }
-  section:nth-child(1) {
+  h1, h2, ul, input {
+    color:inherit;
+  }
+
+  section.config-top {
     color:#fff;
     background: #0d5460;
     flex: 0 0 auto;
   }
-  ol {
+  ul {
     padding:0;
     color: #0d5460;
-    list-style-position: inside;
+    list-style: none;
   }
-  li.empty:after {
-    content: '...';
-    color: #666;
-    font-size: 1.4em;
-    margin-left: 2.4rem;
-    vertical-align: middle;
+  li div {
     display: inline-flex;
+    justify-content: space-between;
+    align-content: center;
+    top: 0;
+    position: relative;
+    width: 100%;
+  }
+  li.empty div:after {
+    content: '... No results found...';
+    color: #666;
+    font-size: 0.8em;
+    flex:1 1 auto;
+    text-align:center;
   }
   li {
     font-size:1.4em;
-    padding:1em 0;
+    padding:0.5em 0;
     background:none;
     transition:background 2s;
     height:100%;
-    padding-left:1em;
-    padding-right:1em;
   }
-  li.highlight {
-    background:rgba(255, 233, 0, 0.6);
-    border-radius:5px;
+  li.highlight div {
+    background: #E3B505;
+    border-radius: 9999px;
+    outline: 3px solid #E3B505;
+    scroll-margin-top: 50vh;
   }
-
-  .progress-bar {
-    background:rgba(255,255,255,0.4);
-    height:4px;
-    width:100%;
+  li h6 {
+    font-weight:normal;
+    margin: 0 0 0.4em;
   }
-  .progress {
-    width:63%;
-    background:#fff;
-    height:100%;
-  }
-
-  .bubble {
+  .options {
     width: 2.4em;
     height: 2.4em;
     margin:0;
-    margin-left:calc(25% - 2.5em);
     display: inline-flex;
     text-align: center;
     border-radius: 50%;
     flex: 0 0 auto;
     justify-content: center;
     flex-direction: column;
-    outline-color: #0d5460;
-    outline-style:solid;
-    outline-offset: -2px;
     font-size:1rem;
+  }
+  .best {
+    background-color: #0d5460;
+    color:#fff;
+  }
+  .ok-old {
+    background-image: linear-gradient(135deg, #0d5460 16.67%, transparent 16.67%, transparent 50%, #0d5460 50%, #0d5460 66.67%, transparent 66.67%, transparent 100%);
+    background-size: 16.97px 16.97px;
+    color: #fe5f55;
+    font-weight: bold;
   }
 </style>

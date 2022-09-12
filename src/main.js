@@ -1,11 +1,13 @@
 import { createApp } from 'vue'
+
 import { createRouter, createWebHistory } from 'vue-router'
+import { Vue3ProgressPlugin } from '@marcoschulte/vue3-progress'
+import ModalContainer from '@/components/ModalContainer'
 
 import App from './App.vue'
 import './assets/page.css'
 
 const router = createRouter({
-  // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
   history: createWebHistory(),
   routes: [
     {
@@ -22,5 +24,7 @@ const router = createRouter({
 })
 
 const app = createApp(App)
+app.use(Vue3ProgressPlugin)
+app.component('ModalContainer', ModalContainer)
 app.use(router)
 app.mount('#app')

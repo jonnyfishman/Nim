@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;700&display=swap');
-
+/* https://coolors.co/e3b505-56a3a6-0d5460-fe5f55-f2f2f2 */
 html {
   box-sizing: border-box;
 }
@@ -11,18 +11,56 @@ body {
   background: #f7f7ff;
   font-family: 'Roboto', sans-serif;
   margin:0; /* get rid of by setting viewport? */
+  font-size:16px;
 }
 
-p {
+p, em {
   color: #666;
 }
-input[type=text] {
-  background:rgba(255,255,255,0.4);
-  border:none;
-  border-bottom:2px solid #fff;
-  padding:0.5em;
+
+h1 {
+  margin-top:0;
+  font-size: 1.6em;
+  color: #fe5f55;
 }
-button {
+h2 {
+  margin-top:0;
+  font-size: 1.4em;
+  color: #fe5f55;
+}
+h4 {
+  margin-top:0;
+  font-size: 1.2rem;
+}
+fieldset {
+  flex-direction: row;
+  display: flex;
+  border:none;
+  outline:none;
+  width:80%;
+  margin:auto;
+  justify-content: center;
+  align-items: center;
+}
+
+fieldset.row {
+  flex-direction: row;
+}
+fieldset.column {
+  flex-direction: column;
+}
+
+input[type=text] {
+  background: rgba(255,255,255,0.4);
+  border: none;
+  border-bottom: 2px solid #fff;
+  padding: 0.4em;
+  font-size: 1.2em;
+  text-align: center;
+  margin-left: 1em;
+  border-radius: 4px;
+}
+button.btn {
   background: #ccc;
   border:none;
   border-radius:1.5em;
@@ -33,54 +71,161 @@ button {
   margin:2em auto;
   cursor:pointer;
 }
-button:hover {
-  background: purple;
+button.btn:hover {
+  background: #56A3A6;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  color: #f2f2f2;
 }
-button:active {
-  background: red;
+button.btn:active {
+  background: #FE5F55;
 }
-em {
-  color:#000;
+button.player {
+  min-width:30%;
 }
-h1 {
-  margin-top:0;
-  font-size: 2em;
+button.choice {
+  width:2em;
+  height:2em;
+  background:#fe5f55;
+  border-radius:1.5em;
+  color:#f7f7ff;
+  font-size:1.6em;
+  margin:0.4em;
 }
-fieldset {
-  flex-direction: row;
-  display: flex;
-  border:none;
-  outline:none;
-  width:80%;
-  margin:auto;
-  justify-content: center;
-}
-
-section {
-
-}
-main {
-  padding:2em;
-  box-shadow: 0 0 15px rgba(0,0,0,0.75);
-  clip-path: inset(0px -15px 0px 0px);
-  min-height: 100vh;
-  position: fixed;
-  width:70vw;
-  z-index:10;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content:space-around;
-}
-main h1, main h2 {
-  color: #fe5f55;
-}
-aside {
-  display:flex;
-  flex-direction: column;
+button.toggle-help {
   position: absolute;
-  right:0;
+  width: 2em;
+  height: 2em;
+  border: none;
+  width: auto;
+  min-width: 2em;
+  cursor: pointer;
+  border-radius: 4px;
+  background: #FE5F55;
+  color: white;
+  font-weight: bold;
+  top:2.4em;
+  right:2.4em;
+}
+
+
+main {
+  display:flex;
+  transition: transform 2s;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+}
+
+article.game-area {
+  padding:2em;
+  min-height:65vh;
+  display: flex;
+  flex-direction:column;
+  position: relative;
+}
+aside.game-config {
+  width:100%;
+  background: #f2f2f2;
+}
+aside.game-config .config-top {
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+aside.help {
+  color: #222;
+  background: #E3B505;
+  padding:2em;
   min-height:100vh;
-  width:30vw;
+}
+
+@media (min-width:601px) {
+  article.game-area {
+    width:70vw;
+    height:100vh;
+    box-shadow: 0 0 15px rgba(0,0,0,0.75);
+    clip-path: inset(0px -15px 0px 0px);
+    z-index: 100;
+  }
+  aside.game-config {
+    width: 40vw;
+    height: 100vh;
+    overflow-y: scroll;
+  }
+  section.config {
+
+  }
+}
+
+@media (min-width:993px) {
+  #app {
+    overflow-x:hidden;
+  }
+  main {
+    height:100vh;
+
+  }
+  aside.help {
+    position: fixed;
+    margin:15vh 15vw;
+    width:70vw;
+    min-height:70vh;
+    border-radius:10px;
+    z-index:1000;
+    border:1px solid #999;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+  }
+  aside.game-area {
+    flex:1 1 auto;
+    padding:2em;
+    box-shadow: 0 0 15px rgba(0,0,0,0.75);
+    clip-path: inset(0px -15px 0px 0px);
+    display: flex;
+    flex-direction: column;
+    order:2;
+    justify-content: flex-end;
+  }
+  aside.game-config {
+    flex: 0 0 auto;
+    width:30vw;
+    display: flex;
+    height:100vh;
+    flex-direction: column;
+    overflow-y:auto;
+    order:3;
+  }
+
+  fieldset {
+    flex-direction: row;
+    display: flex;
+    border:none;
+    outline:none;
+    width:80%;
+    margin:auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width:1205px) {
+
+}
+
+@media (max-width:600px) {
+
+}
+
+@media (max-width:768px) {
+
+}
+
+@media (min-width:993px) {
+
+}
+
+@media (max-width:992px) and (min-width:601px) {
+
+}
+
+@media (max-width:992px) {
 
 }
