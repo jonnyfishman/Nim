@@ -10,7 +10,7 @@
     </section>
     <section class="config">
       <h2>Total</h2>
-      <p>The larger the circle the better it is.</p>
+      <p>Numbers with a green background represent the calculated best choice.</p>
       <ul v-if="strategy.running.length > 0">
         <li
           v-for="(result, rTotal) in strategy.cumulative"
